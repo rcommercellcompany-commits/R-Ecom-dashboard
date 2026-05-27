@@ -897,10 +897,39 @@ const fp = v => ((+v||0).toFixed(1))+'%';
 
 // ===== PERIOD =====
 let period='month', cFrom=null, cTo=null;
+const periodLabels = {
+  'today': "Aujourd'hui",
+  'week': '7 derniers jours',
+  'month': '30 derniers jours',
+  'quarter': '90 derniers jours',
+  'year': 'Cette année',
+  'all': 'Tout le temps'
+};
+
+function updatePeriodLabel() {
+  const el = document.getElementById('period-lbl');
+  if(!el) return;
+  if(period === 'custom' && cFrom && cTo) {
+    const months = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+    function fmtDate(d) {
+      const dt = new Date(d);
+      return dt.getDate()+' '+months[dt.getMonth()]+' '+dt.getFullYear();
+    }
+    if(cFrom === cTo) {
+      el.textContent = 'Le ' + fmtDate(cFrom);
+    } else {
+      el.textContent = 'Du ' + fmtDate(cFrom) + ' au ' + fmtDate(cTo);
+    }
+  } else {
+    el.textContent = periodLabels[period] || period;
+  }
+}
+
 function setPeriod(p,btn) {
   period=p; cFrom=null; cTo=null;
   document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
+  updatePeriodLabel();
   refreshCur();
 }
 function filterRows() {
@@ -1282,9 +1311,9 @@ function applyCal(){
   if(!calSt.selStart){notify('⚠ Choisis un jour',true);return;}
   cFrom=calSt.selStart;cTo=calSt.selEnd||calSt.selStart;period='custom';
   document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
-  closeCal();refreshCur();notify('📅 '+cFrom+(cTo!==cFrom?' → '+cTo:''));
+  closeCal();updatePeriodLabel();refreshCur();notify('📅 '+cFrom+(cTo!==cFrom?' → '+cTo:''));
 }
-function resetCal(){cFrom=null;cTo=null;period='month';document.querySelectorAll('.ptab').forEach((t,i)=>{if(i===2)t.classList.add('active');else t.classList.remove('active');});closeCal();refreshCur();}
+function resetCal(){cFrom=null;cTo=null;period='month';document.querySelectorAll('.ptab').forEach((t,i)=>{if(i===2)t.classList.add('active');else t.classList.remove('active');});closeCal();updatePeriodLabel();refreshCur();}
 function setPreset(type){
   const now=new Date(),today=now.toISOString().split('T')[0];
   if(type==='today'){calSt.selStart=today;calSt.selEnd=today;}
